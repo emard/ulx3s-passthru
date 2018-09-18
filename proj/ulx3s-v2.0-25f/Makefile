@@ -29,6 +29,11 @@ JUNK = ${IMPL_DIR} .recovery ._Real_._Math_.vhd *.sty reportview.xml
 JUNK += dummy_sym.sort project_tcl.html promote.xml
 JUNK += generate_core.tcl generate_ngd.tcl msg_file.log
 JUNK += project_tcr.dir
+JUNK += .run_manager.ini
+JUNK += .setting.ini
+JUNK += .spread_sheet.ini
+JUNK += .spreadsheet_view.ini
+JUNK += ulx3s_v20.ccl
 
 all: $(PROJECT)/$(PROJECT)_$(PROJECT).bit \
 	$(PROJECT)/$(BITSTREAM_PREFIX).bit \
