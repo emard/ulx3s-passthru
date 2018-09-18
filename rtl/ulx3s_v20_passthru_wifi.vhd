@@ -74,6 +74,7 @@ architecture Behavioral of ulx3s_passthru_wifi is
   signal R_blinky: std_logic_vector(26 downto 0);
   signal S_prog_in, S_prog_out: std_logic_vector(1 downto 0);
   signal R_spi_miso: std_logic_vector(7 downto 0);
+  signal S_oled_csn: std_logic;
 begin
 
   -- TX/RX passthru
@@ -97,7 +98,7 @@ begin
   --sd_d(0) <= '0' when wifi_gpio0 = '0' else 'Z'; -- gpio2 together with gpio0 to 0
   --sd_d(2) <= '0' when wifi_gpio0 = '0' else 'Z'; -- wifi gpio12
   sd_d(0) <= '0' when (S_prog_in(0) xor S_prog_in(1)) = '1' else
-                R_spi_miso(0) when oled_csn = '0' else -- SPI reading buttons with OLED CSn
+                R_spi_miso(0) when S_oled_csn = '0' else -- SPI reading buttons with OLED CSn
                 'Z'; -- gpio2 to 0 during programming init
   -- sd_d(2) <= '0' when (S_prog_in(0) xor S_prog_in(1)) = '1' else 'Z'; -- wifi gpio12
   -- permanent flashing mode
@@ -106,7 +107,8 @@ begin
 
   sd_d(3 downto 1) <= (others => 'Z');
 
-  oled_csn <= wifi_gpio17;
+  S_oled_csn <= wifi_gpio17;
+  oled_csn <= S_oled_csn;
   oled_clk <= sd_clk; -- wifi_gpio14
   oled_mosi <= sd_cmd; -- wifi_gpio15
   oled_dc <= wifi_gpio16;
@@ -115,7 +117,7 @@ begin
   -- show OLED signals on the LEDs
   -- show SD signals on the LEDs
   -- led(5 downto 0) <= sd_clk & sd_d(2) & sd_d(3) & sd_cmd & sd_d(0) & sd_d(1);
-  led(7 downto 0) <= oled_csn & R_spi_miso(0) & sd_clk & sd_d(2) & sd_d(3) & sd_cmd & sd_d(0) & sd_d(1);
+  led(7 downto 0) <= S_oled_csn & R_spi_miso(0) & sd_clk & sd_d(2) & sd_d(3) & sd_cmd & sd_d(0) & sd_d(1);
 
   -- clock alive blinky
   process(clk_25MHz)
