@@ -19,7 +19,7 @@ entity ulx3s_passthru_wifi is
   );
   port
   (
-  clk_25MHz: in std_logic;  -- main clock input from 25MHz clock source
+  clk_25mhz: in std_logic;  -- main clock input from 25MHz clock source must be lowercase
 
   -- UART0 (FTDI USB slave serial)
   ftdi_rxd: out   std_logic;
