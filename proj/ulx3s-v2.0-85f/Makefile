@@ -9,7 +9,8 @@ DIAMOND_BIN :=  $(shell find ${DIAMOND_BASE}/ -maxdepth 2 -name bin | sort -rn |
 DIAMONDC := $(shell find ${DIAMOND_BIN}/ -name diamondc)
 DDTCMD := $(shell find ${DIAMOND_BIN}/ -name ddtcmd)
 
-OPENOCD_BASE := ../../programmer/openocd/ulx3s/
+OPENOCD_BASE := ../../programmer/openocd/ulx3s
+OPENOCD := openocd_ft232r
 
 # name of the project as defined in project file
 PROJECT = project
@@ -74,7 +75,8 @@ $(PROJECT)/$(BITSTREAM_PREFIX)_flash_is25lp032d.vme: $(PROJECT)/$(PROJECT)_$(PRO
 	LANG=C ${DDTCMD} -oft -fullvme -if $(XCF_PREFIX)f_flash_is25lp032d.xcf -nocompress -noheader -of $@
 
 $(PROJECT)/$(BITSTREAM_PREFIX)_flash_is25lp032d.svf: $(PROJECT)/$(PROJECT)_$(PROJECT)_flash_is25lp032d.mcs
-	LANG=C ${DDTCMD} -oft -svfsingle -revd -maxdata 8 -if $(XCF_PREFIX)f_flash_is25lp032d.xcf -of $@
+	# LANG=C ${DDTCMD} -oft -svfsingle -revd -maxdata 8 -if $(XCF_PREFIX)f_flash_is25lp032d.xcf -of $@
+	LANG=C ${DDTCMD} -oft -svfsingle -revd -if $(XCF_PREFIX)f_flash_is25lp032d.xcf -of $@
 
 #$(PROJECT)/$(PROJECT)_$(PROJECT)_flash_s25fl164k.mcs: $(PROJECT)/$(PROJECT)_$(PROJECT).bit
 #	LANG=C ${DDTCMD} -dev LFE5U-$(FPGA_SIZE)F -oft -advanced -format int -flashsize 128 -quad 1 -header \
@@ -101,12 +103,13 @@ $(PROJECT)/$(BITSTREAM_PREFIX)_flash_is25lp128f.vme: $(PROJECT)/$(PROJECT)_$(PRO
 
 $(PROJECT)/$(BITSTREAM_PREFIX)_flash_is25lp128f.svf: $(PROJECT)/$(PROJECT)_$(PROJECT)_flash_is25lp128f.mcs
 	LANG=C ${DDTCMD} -oft -svfsingle -revd -maxdata 8 -if $(XCF_PREFIX)f_flash_is25lp128f.xcf -of $@
+	sed --in-place -f $(OPENOCD_BASE)/fix_flash_is25lp128f.sed $@
 
 program: $(PROJECT)/$(PROJECT)_$(PROJECT).bit
 	echo pgr_project open $(XCF_PREFIX)f_sram.xcf \; pgr_program run | ${DIAMONDC}
 
 program_wifi: $(PROJECT)/$(PROJECT)_$(PROJECT)_sram.svf
-	openocd --file=$(OPENOCD_BASE)/remote.ocd --file=$(OPENOCD_BASE)/ecp5-$(FPGA_SIZE)f.ocd
+	$(OPENOCD) --file=$(OPENOCD_BASE)/remote.ocd --file=$(OPENOCD_BASE)/ecp5-$(FPGA_SIZE)f.ocd
 
 program_web: $(PROJECT)/$(PROJECT)_$(PROJECT)_sram.svf
 	svfupload.py ulx3s.lan $<
@@ -115,7 +118,10 @@ program_web_flash: $(PROJECT)/$(PROJECT)_$(PROJECT)_flash.svf
 	svfupload.py ulx3s.lan $<
 
 program_ft2232: $(PROJECT)/$(PROJECT)_$(PROJECT)_sram.svf
-	openocd --file=$(OPENOCD_BASE)/ft2232-fpu1.ocd --file=$(OPENOCD_BASE)/ecp5-$(FPGA_SIZE)f.ocd
+	$(OPENOCD) --file=$(OPENOCD_BASE)/ft2232-fpu1.ocd --file=$(OPENOCD_BASE)/ecp5-$(FPGA_SIZE)f.ocd
+
+program_ft231x: $(PROJECT)/$(BITSTREAM_PREFIX)_sram.svf
+	$(OPENOCD) --file=$(OPENOCD_BASE)/ft231x.ocd --file=$(OPENOCD_BASE)/ecp5-$(FPGA_SIZE)f.ocd
 
 program_flea: $(PROJECT)/$(PROJECT)_$(PROJECT)_sram.vme
 	FleaFPGA-JTAG $(PROJECT)/$(PROJECT)_$(PROJECT)_sram.vme
