@@ -123,7 +123,7 @@ program_ft231x: $(PROJECT)/$(BITSTREAM_PREFIX)_sram.svf
 	rm -f $(PROJECT)/$(PROJECT)_$(PROJECT).svf
 
 program_ft231x_flash: $(PROJECT)/$(BITSTREAM_PREFIX)_sram.svf
-	ln -sf $(BITSTREAM_PREFIX)_flash_is25lp032d.svf $(PROJECT)/$(PROJECT)_$(PROJECT).svf
+	ln -sf $(BITSTREAM_PREFIX)_flash_is25lp128f.svf $(PROJECT)/$(PROJECT)_$(PROJECT).svf
 	$(OPENOCD) --file=$(OPENOCD_BASE)/ft231x.ocd --file=$(OPENOCD_BASE)/ecp5-$(FPGA_SIZE)f.ocd
 	rm -f $(PROJECT)/$(PROJECT)_$(PROJECT).svf
 
