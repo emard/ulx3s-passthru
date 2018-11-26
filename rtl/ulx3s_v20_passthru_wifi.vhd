@@ -71,10 +71,10 @@ entity ulx3s_passthru_wifi is
 end;
 
 architecture Behavioral of ulx3s_passthru_wifi is
-  signal R_blinky: std_logic_vector(26 downto 0);
   signal S_prog_in, S_prog_out: std_logic_vector(1 downto 0);
   signal R_spi_miso: std_logic_vector(7 downto 0);
   signal S_oled_csn: std_logic;
+  signal R_prog_release: std_logic_vector(27 downto 0); -- counter to release programming interface
 begin
 
   -- TX/RX passthru
@@ -93,19 +93,21 @@ begin
   S_prog_out <= "01" when S_prog_in = "10" else
                 "10" when S_prog_in = "01" else
                 "11";
-  wifi_en <= S_prog_out(1);
-  wifi_gpio0 <= S_prog_out(0) and btn(0); -- holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
+  wifi_en <= ftdi_nrts when R_prog_release(R_prog_release'high) = '0' else S_prog_out(1);
+  wifi_gpio0 <= ftdi_ndtr when R_prog_release(R_prog_release'high) = '0' else S_prog_out(0) and btn(0); -- holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
   --sd_d(0) <= '0' when wifi_gpio0 = '0' else 'Z'; -- gpio2 together with gpio0 to 0
   --sd_d(2) <= '0' when wifi_gpio0 = '0' else 'Z'; -- wifi gpio12
   sd_d(0) <= '0' when (S_prog_in(0) xor S_prog_in(1)) = '1' else
-                R_spi_miso(0) when S_oled_csn = '0' else -- SPI reading buttons with OLED CSn
-                'Z'; -- gpio2 to 0 during programming init
+             '1' when R_prog_release(R_prog_release'high) = '0' else
+             R_spi_miso(0) when S_oled_csn = '0' else -- SPI reading buttons with OLED CSn
+             'Z'; -- gpio2 to 0 during programming init
   -- sd_d(2) <= '0' when (S_prog_in(0) xor S_prog_in(1)) = '1' else 'Z'; -- wifi gpio12
   -- permanent flashing mode
   -- wifi_en <= ftdi_nrts;
   -- wifi_gpio0 <= ftdi_ndtr;
 
-  sd_d(3 downto 1) <= (others => 'Z');
+  sd_d(3 downto 1) <= (others => '1') when R_prog_release(R_prog_release'high) = '0' else
+                      (others => 'Z');
 
   S_oled_csn <= wifi_gpio17;
   oled_csn <= S_oled_csn;
@@ -119,14 +121,19 @@ begin
   -- led(5 downto 0) <= sd_clk & sd_d(2) & sd_d(3) & sd_cmd & sd_d(0) & sd_d(1);
   led(7 downto 0) <= S_oled_csn & R_spi_miso(0) & sd_clk & sd_d(2) & sd_d(3) & sd_cmd & sd_d(0) & sd_d(1);
 
-  -- clock alive blinky
+  -- programming release counter
   process(clk_25MHz)
   begin
       if rising_edge(clk_25MHz) then
-        R_blinky <= R_blinky+1;
+        if (S_prog_in(0) xor S_prog_in(1)) = '1' then
+          R_prog_release <= (others => '0');
+        else
+          if R_prog_release(R_prog_release'high) = '0' then
+            R_prog_release <= R_prog_release + 1;
+          end if;
+        end if;
       end if;
   end process;
-  -- led(7) <= R_blinky(R_blinky'high);
 
   y_btn: if true generate
   process(sd_clk, wifi_gpio17) -- gpio17 is OLED CSn
