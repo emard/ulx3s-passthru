@@ -71,10 +71,11 @@ entity ulx3s_passthru_wifi is
 end;
 
 architecture Behavioral of ulx3s_passthru_wifi is
-  signal S_prog_in, S_prog_out: std_logic_vector(1 downto 0);
+  signal S_prog_in, R_prog_in, S_prog_out: std_logic_vector(1 downto 0);
   signal R_spi_miso: std_logic_vector(7 downto 0);
   signal S_oled_csn: std_logic;
-  signal R_prog_release: std_logic_vector(27 downto 0); -- counter to release programming interface
+  constant C_prog_release_timeout: integer := 16; -- 2^n * 25MHz timeout for initialization phase
+  signal R_prog_release: std_logic_vector(C_prog_release_timeout downto 0) := (others => '1'); -- timeout that holds lines for reliable entering programming mode
 begin
 
   -- TX/RX passthru
@@ -93,12 +94,12 @@ begin
   S_prog_out <= "01" when S_prog_in = "10" else
                 "10" when S_prog_in = "01" else
                 "11";
-  wifi_en <= ftdi_nrts when R_prog_release(R_prog_release'high) = '0' else S_prog_out(1);
-  wifi_gpio0 <= ftdi_ndtr when R_prog_release(R_prog_release'high) = '0' else S_prog_out(0) and btn(0); -- holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
+  wifi_en <= S_prog_out(1);
+  wifi_gpio0 <= S_prog_out(0) and btn(0); -- holding BTN0 will hold gpio0 LOW, signal for ESP32 to take control
   --sd_d(0) <= '0' when wifi_gpio0 = '0' else 'Z'; -- gpio2 together with gpio0 to 0
   --sd_d(2) <= '0' when wifi_gpio0 = '0' else 'Z'; -- wifi gpio12
-  sd_d(0) <= '0' when (S_prog_in(0) xor S_prog_in(1)) = '1' else
-             '1' when R_prog_release(R_prog_release'high) = '0' else
+  sd_d(0) <= S_prog_out(0) when R_prog_release(R_prog_release'high) = '0' else
+             -- '1' when R_prog_release(R_prog_release'high) = '0' else
              R_spi_miso(0) when S_oled_csn = '0' else -- SPI reading buttons with OLED CSn
              'Z'; -- gpio2 to 0 during programming init
   -- sd_d(2) <= '0' when (S_prog_in(0) xor S_prog_in(1)) = '1' else 'Z'; -- wifi gpio12
@@ -106,8 +107,7 @@ begin
   -- wifi_en <= ftdi_nrts;
   -- wifi_gpio0 <= ftdi_ndtr;
 
-  sd_d(3 downto 1) <= (others => '1') when R_prog_release(R_prog_release'high) = '0' else
-                      (others => 'Z');
+  sd_d(3 downto 1) <= (others => 'Z');
 
   S_oled_csn <= wifi_gpio17;
   oled_csn <= S_oled_csn;
@@ -118,14 +118,16 @@ begin
 
   -- show OLED signals on the LEDs
   -- show SD signals on the LEDs
-  -- led(5 downto 0) <= sd_clk & sd_d(2) & sd_d(3) & sd_cmd & sd_d(0) & sd_d(1);
-  led(7 downto 0) <= S_oled_csn & R_spi_miso(0) & sd_clk & sd_d(2) & sd_d(3) & sd_cmd & sd_d(0) & sd_d(1);
+  -- led(7 downto 0) <= S_oled_csn & R_spi_miso(0) & sd_clk & sd_d(2) & sd_d(3) & sd_cmd & sd_d(0) & sd_d(1); -- beautiful but makes core unreliable
+  led(7) <= not R_prog_release(R_prog_release'high); -- ESP32 programming start: blinks too short to be visible
+  led(6) <= S_prog_out(1); -- green LED indicates ESP32 disabled
 
   -- programming release counter
   process(clk_25MHz)
   begin
       if rising_edge(clk_25MHz) then
-        if (S_prog_in(0) xor S_prog_in(1)) = '1' then
+        R_prog_in <= S_prog_in;
+        if S_prog_out = "01" and R_prog_in = "11" then
           R_prog_release <= (others => '0');
         else
           if R_prog_release(R_prog_release'high) = '0' then
