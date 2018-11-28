@@ -74,7 +74,7 @@ architecture Behavioral of ulx3s_passthru_wifi is
   signal S_prog_in, R_prog_in, S_prog_out: std_logic_vector(1 downto 0);
   signal R_spi_miso: std_logic_vector(7 downto 0);
   signal S_oled_csn: std_logic;
-  constant C_prog_release_timeout: integer := 16; -- 2^n * 25MHz timeout for initialization phase
+  constant C_prog_release_timeout: integer := 17; -- 2^n * 25MHz timeout for initialization phase
   signal R_prog_release: std_logic_vector(C_prog_release_timeout downto 0) := (others => '1'); -- timeout that holds lines for reliable entering programming mode
 begin
 
@@ -103,11 +103,11 @@ begin
              R_spi_miso(0) when S_oled_csn = '0' else -- SPI reading buttons with OLED CSn
              'Z'; -- gpio2 to 0 during programming init
   -- sd_d(2) <= '0' when (S_prog_in(0) xor S_prog_in(1)) = '1' else 'Z'; -- wifi gpio12
+  -- sd_d(3) <= '1' when R_prog_release(R_prog_release'high) = '0' else 'Z';
+  -- sd_clk <= clk_25mhz when R_prog_release(R_prog_release'high) = '0' else 'Z';
   -- permanent flashing mode
   -- wifi_en <= ftdi_nrts;
   -- wifi_gpio0 <= ftdi_ndtr;
-
-  sd_d(3 downto 1) <= (others => 'Z');
 
   S_oled_csn <= wifi_gpio17;
   oled_csn <= S_oled_csn;
@@ -121,6 +121,10 @@ begin
   -- led(7 downto 0) <= S_oled_csn & R_spi_miso(0) & sd_clk & sd_d(2) & sd_d(3) & sd_cmd & sd_d(0) & sd_d(1); -- beautiful but makes core unreliable
   led(7) <= not R_prog_release(R_prog_release'high); -- ESP32 programming start: blinks too short to be visible
   led(6) <= S_prog_out(1); -- green LED indicates ESP32 disabled
+  --led(3) <= sd_d(3); -- sd_d(3) is sd_cs, pullup=NONE in constraints otherwise SD card will prevents esp32 from entering programming mode...
+  --led(2) <= sd_d(2);
+  --led(1) <= sd_d(1);
+  --led(0) <= sd_d(0);
 
   -- programming release counter
   process(clk_25MHz)
