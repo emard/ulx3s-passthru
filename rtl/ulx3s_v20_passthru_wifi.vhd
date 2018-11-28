@@ -74,7 +74,7 @@ architecture Behavioral of ulx3s_passthru_wifi is
   signal S_prog_in, R_prog_in, S_prog_out: std_logic_vector(1 downto 0);
   signal R_spi_miso: std_logic_vector(7 downto 0);
   signal S_oled_csn: std_logic;
-  constant C_prog_release_timeout: integer := 17; -- 2^n * 25MHz timeout for initialization phase
+  constant C_prog_release_timeout: integer := 17; -- default 17 2^n * 25MHz timeout for initialization phase
   signal R_prog_release: std_logic_vector(C_prog_release_timeout downto 0) := (others => '1'); -- timeout that holds lines for reliable entering programming mode
 begin
 
@@ -103,6 +103,7 @@ begin
              R_spi_miso(0) when S_oled_csn = '0' else -- SPI reading buttons with OLED CSn
              'Z'; -- gpio2 to 0 during programming init
   -- sd_d(2) <= '0' when (S_prog_in(0) xor S_prog_in(1)) = '1' else 'Z'; -- wifi gpio12
+  -- sd_d(2) <= '0' when R_prog_release(R_prog_release'high) = '0' else 'Z'; -- wifi gpio12
   -- sd_d(3) <= '1' when R_prog_release(R_prog_release'high) = '0' else 'Z';
   -- sd_clk <= clk_25mhz when R_prog_release(R_prog_release'high) = '0' else 'Z';
   -- permanent flashing mode
