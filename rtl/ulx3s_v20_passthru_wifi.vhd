@@ -142,7 +142,6 @@ begin
       end if;
   end process;
 
-  y_btn: if true generate
   process(sd_clk, wifi_gpio17) -- gpio17 is OLED CSn
   begin
     if wifi_gpio17 = '1' then
@@ -153,6 +152,5 @@ begin
       end if;
     end if;
   end process;
-  end generate;
 
 end Behavioral;
