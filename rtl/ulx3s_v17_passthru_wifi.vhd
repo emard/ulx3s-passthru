@@ -102,7 +102,6 @@ begin
   gp(9) <= '0' when S_hspi_sd_csn = '1' else S_hspi_miso; -- WiFi GPIO12 selects flash voltage 3.3V
   gn(9) <= 'Z';
 
-  g_x: if true generate
   -- OLED display passthru (using pins on J1 shared with wifi)
   --gp(9) <= S_hspi_miso; -- wifi gpio12
   S_hspi_mosi <= gn(9); -- wifi gpio13
@@ -133,7 +132,6 @@ begin
   gn(12) <= btn(4); -- down
   gp(13) <= btn(5); -- left
   gn(13) <= btn(6); -- right
-  end generate;
 
   -- clock alive blinky
   process(clk)
