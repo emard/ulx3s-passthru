@@ -59,11 +59,11 @@ entity ulx3s_passthru_wifi is
   --flash_csn    : out     std_logic;
 
   -- SD card (SPI1)
-  sd_dat0_do: in std_logic := 'Z';
+  sd_dat0_do: in std_logic;
   sd_dat3_csn, sd_cmd_di: out std_logic := '1';
   sd_clk: out std_logic := '0';
-  sd_dat1_irq, sd_dat2: inout std_logic := 'Z';
-  sd_cdn, sd_wp: inout std_logic := 'Z'
+  sd_dat1_irq, sd_dat2: inout std_logic;
+  sd_cdn, sd_wp: inout std_logic
   );
 end;
 
@@ -100,7 +100,7 @@ begin
   -- wifi_gpio0 <= ftdi_ndtr;
 
   gp(9) <= '0' when S_hspi_sd_csn = '1' else S_hspi_miso; -- WiFi GPIO12 selects flash voltage 3.3V
-  gn(9) <= 'Z';
+  -- gn(9) <= 'Z';
 
   -- OLED display passthru (using pins on J1 shared with wifi)
   --gp(9) <= S_hspi_miso; -- wifi gpio12
