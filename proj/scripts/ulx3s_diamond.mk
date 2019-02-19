@@ -105,7 +105,7 @@ SCRIPTS ?= scripts
 FPGA_CHIP_UPPERCASE := $(shell echo $(FPGA_CHIP) | tr '[:lower:]' '[:upper:]')
 FPGA_PACKAGE_UPPERCASE := $(shell echo $(FPGA_PACKAGE) | tr '[:lower:]' '[:upper:]')
 
-all: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).vme $(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash_$(FLASH_CHIP).vme $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).svf
+all: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).vme $(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash_$(FLASH_CHIP).vme $(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash_$(FLASH_CHIP).svf $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).svf
 # all: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).svf
 #all: $(PROJECT)/$(PROJECT)_$(PROJECT).bit
 #all: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit
@@ -205,6 +205,10 @@ $(BOARD)_$(FPGA_SIZE)f_flash_$(FLASH_CHIP).xcf: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT
 $(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash_$(FLASH_CHIP).vme: ulx3s_$(FPGA_SIZE)f_flash_$(FLASH_CHIP).xcf $(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash.mcs
 	LANG=C ${DDTCMD} -oft -fullvme -if $(BOARD)_$(FPGA_SIZE)f_flash_$(FLASH_CHIP).xcf -nocompress -noheader -of $@
 
+# run DDTCMD to generate flash SVF file
+$(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash_$(FLASH_CHIP).svf: $(BOARD)_$(FPGA_SIZE)f_flash_$(FLASH_CHIP).xcf $(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash.mcs
+	LANG=C ${DDTCMD} -oft -svfsingle -revd -maxdata 8 -if $(BOARD)_$(FPGA_SIZE)f_flash_$(FLASH_CHIP).xcf -of $@
+
 # generate SVF file by prjtrellis python script
 #$(BOARD)_$(FPGA_SIZE)f_$(PROJECT).svf: $(BOARD)_$(FPGA_SIZE)f_$(PROJECT).bit
 #	$(BIT2SVF) $< $@
@@ -261,6 +265,7 @@ JUNK += $(BOARD)_$(FPGA_SIZE)f.xcf
 JUNK += $(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash.mcs
 JUNK += $(BOARD)_$(FPGA_SIZE)f_flash_$(FLASH_CHIP).xcf
 JUNK += $(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash_$(FLASH_CHIP).vme
+JUNK += $(BOARD)_$(FPGA_SIZE)f_$(PROJECT)_flash_$(FLASH_CHIP).svf
 JUNK += $(BOARD)_$(FPGA_SIZE)f.ocd
 JUNK += $(CLK0_FILE_NAME) $(CLK1_FILE_NAME) $(CLK2_FILE_NAME) $(CLK3_FILE_NAME)
 # diamond junk
