@@ -34,7 +34,7 @@ entity ulx3s_passthru_wifi is
   wifi_rxd: out   std_logic;
   wifi_txd: in    std_logic;
   -- WiFi additional signaling
-  wifi_en, wifi_gpio0, wifi_gpio2, wifi_gpio16, wifi_gpio17: inout  std_logic := 'Z'; -- '0' will disable wifi by default
+  wifi_en, wifi_gpio0, wifi_gpio2, wifi_gpio5, wifi_gpio16, wifi_gpio17: inout  std_logic := 'Z'; -- '0' will disable wifi by default
 
   -- Onboard blinky
   led: out std_logic_vector(7 downto 0);
@@ -120,8 +120,9 @@ begin
   -- show OLED signals on the LEDs
   -- show SD signals on the LEDs
   -- led(7 downto 0) <= S_oled_csn & R_spi_miso(0) & sd_clk & sd_d(2) & sd_d(3) & sd_cmd & sd_d(0) & sd_d(1); -- beautiful but makes core unreliable
-  led(7) <= not R_prog_release(R_prog_release'high); -- ESP32 programming start: blinks too short to be visible
+  led(7) <= wifi_gpio5; -- for boards without D22 soldered
   led(6) <= S_prog_out(1); -- green LED indicates ESP32 disabled
+  led(5) <= not R_prog_release(R_prog_release'high); -- ESP32 programming start: blinks too short to be visible
   --led(3) <= sd_d(3); -- sd_d(3) is sd_cs, pullup=NONE in constraints otherwise SD card will prevents esp32 from entering programming mode...
   --led(2) <= sd_d(2);
   --led(1) <= sd_d(1);
