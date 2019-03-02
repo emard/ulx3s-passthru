@@ -66,7 +66,9 @@ entity ulx3s_passthru_wifi is
   sd_d: inout std_logic_vector(3 downto 0); -- wifi_gpio 13,12,4,2
   sd_cmd: in std_logic; -- wifi_gpio15
   sd_clk: in std_logic; -- wifi_gpio14
-  sd_cdn, sd_wp: in std_logic 
+  sd_cdn, sd_wp: in std_logic;
+
+  user_programn: out std_logic -- setting this low will skip to next multiboot image
   );
 end;
 
@@ -76,6 +78,7 @@ architecture Behavioral of ulx3s_passthru_wifi is
   signal S_oled_csn: std_logic;
   constant C_prog_release_timeout: integer := 17; -- default 17 2^n * 25MHz timeout for initialization phase
   signal R_prog_release: std_logic_vector(C_prog_release_timeout downto 0) := (others => '1'); -- timeout that holds lines for reliable entering programming mode
+  signal R_progn: std_logic_vector(7 downto 0) := (others => '0');
 begin
 
   -- TX/RX passthru
@@ -153,5 +156,18 @@ begin
       end if;
     end if;
   end process;
+
+  -- if user presses BTN0 and BTN1 then pull down PROGRAMN for multiboot
+  process(clk_25MHz)
+  begin
+    if rising_edge(clk_25MHz) then
+      if btn(0) = '0' and btn(1) = '1' then
+        R_progn <= R_progn + 1; -- BTN0 BTN1 are pressed
+      else
+        R_progn <= (others => '0'); -- BTN0 BTN1 are not pressed
+      end if;
+    end if;
+  end process;
+  user_programn <= not R_progn(R_progn'high);
 
 end Behavioral;
