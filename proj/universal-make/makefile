@@ -2,7 +2,7 @@
 PROJECT = passthru
 BOARD = ulx3s
 # 12 25 45 85
-FPGA_SIZE = 85
+FPGA_SIZE = 12
 
 FPGA_PACKAGE = 6bg381c
 # config flash: 1:SPI (standard), 4:QSPI (quad)
@@ -12,6 +12,7 @@ FLASH_CHIP = is25lp128f
 
 # ******* design files *******
 CONSTRAINTS = ../../constraints/ulx3s_v20.lpf
+#CONSTRAINTS = ../../constraints/ulx3s_v20_uncompressed.lpf
 TOP_MODULE = ulx3s_passthru_wifi
 TOP_MODULE_FILE = ../../rtl/ulx3s_v20_passthru_wifi.vhd
 
