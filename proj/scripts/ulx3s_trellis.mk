@@ -48,7 +48,7 @@ FPGA_CHIP_EQUIVALENT ?= lfe5u-$(FPGA_K)f
 
 # open source synthesis tools
 ECPPLL ?= $(TRELLIS)/libtrellis/ecppll
-ECPPACK ?= $(TRELLIS)/libtrellis/ecppack
+ECPPACK ?= $(TRELLIS)/libtrellis/ecppack --compress
 TRELLISDB ?= $(TRELLIS)/database
 LIBTRELLIS ?= $(TRELLIS)/libtrellis
 BIT2SVF ?= $(TRELLIS)/tools/bit_to_svf.py
